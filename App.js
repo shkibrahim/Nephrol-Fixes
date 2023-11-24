@@ -163,6 +163,7 @@ const scheduleNightlyNotifications = async () => {
     console.log('asfaf', dataList);
 
     if (dataList && dataList.length > 0) {
+      console.log('data arha ha yar')
       try {
         dataList.forEach((data) => {
           // Parse reminderTime as a Date object for each item in the list
@@ -232,7 +233,7 @@ useEffect(() => {
       SplashScreen.hide();
 
       // Ensure retrieveDataList is called first
-      await retrieveDataList();
+      // await retrieveDataList();
 console.log(datalist)
       // Continue with other operations
       createChannels();

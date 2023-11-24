@@ -14,119 +14,102 @@ import { UserContext } from '../Hooks/AuthContext';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 
 const MedicineHome = ({ navigation}) => {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  const [datalist,setdatalist] = useState()
+  const createChannels = () => {
+    PushNotification.createChannel({
+      channelId: 'test-channel',
+      channelName: 'Test Channel',
+    });
+  };
   
-//   const [Data, setData] = useState();
+  
+  
+  const scheduleNightlyNotifications = async () => {
+    try {
+      const existingList = await AsyncStorage.getItem('ReminderList');
+      const dataList = existingList ? JSON.parse(existingList) : [];
+  
+      // Process the list as needed
+      console.log('Retrieved data list:', dataList);
+  
+      setdatalist(dataList);
+      console.log('asfaf', dataList);
+  
+      if (dataList && dataList.length > 0) {
+        console.log('data arha ha yar')
+        try {
+          dataList.forEach((data) => {
+            // Parse reminderTime as a Date object for each item in the list
+            const parsedReminderTime = new Date(data.reminderTime);
+  
+            // Check if parsing was successful
+            if (isNaN(parsedReminderTime.getTime())) {
+              console.error('Error parsing reminderTime. Unable to schedule notification for data:', data);
+            } else {
+              // Format the reminderTime as a string in the desired format
+              const formattedReminderTime = parsedReminderTime.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true,
+              });
+  
+              // Ensure that the scheduled time is in the future
+              if (parsedReminderTime <= new Date()) {
+                parsedReminderTime.setDate(parsedReminderTime.getDate() + 1); // Schedule for the next day
+              }
+  
+              console.log('Formatted reminderTime:', formattedReminderTime);
+  
+              // Check if PushNotification is defined and push notifications are supported
+              if (PushNotification && PushNotification.localNotificationSchedule) {
+                // Schedule the notification using parsedReminderTime
+                PushNotification.localNotificationSchedule({
+                  channelId: 'test-channel',
+                  date: parsedReminderTime,
+                  title: 'kuch bhi',
+                  message: `It's time to take your nightly medicine at ${formattedReminderTime}!`,
+                  repeatTime: 'daily',
+                });
+              } else {
+                console.error('Push notifications not supported or PushNotification.localNotificationSchedule is not defined.');
+              }
+            }
+          });
+        } catch (error) {
+          console.error('Error scheduling notifications:', error);
+        }
+      } else {
+        console.log('No data or empty list. Unable to schedule notifications.');
+      }
+    } catch (error) {
+      console.error('Error retrieving data:', error);
+    }
+  };
+  
+  useEffect(() => {
+  
+    fetchData();
+  }, []);
+  
 
-// const loadDataFromStorage = async () => {
-//   try {
-//     const savedData = await AsyncStorage.getItem('Reminder');
-//     if (savedData !== null) {
-//       const parsedData = JSON.parse(savedData);
-//       setData(parsedData);
-//       console.log('data agya')
-//     }
-//   } catch (error) {
-//     console.error('Error loading data:', error);
-//   }
-// };
-
-// const createChannels = () => {
-//   PushNotification.createChannel({
-//     channelId: 'test-channel',
-//     channelName: 'Test Channel',
-//   });
-// };
-
-// const scheduleNightlyNotification = () => {
-//   if (Data && Data.reminderTime) {
-//     try {
-//       // Parse reminderTime as a Date object
-//       const parsedReminderTime = new Date(Data.reminderTime);
-
-//       // Check if parsing was successful
-//       if (isNaN(parsedReminderTime.getTime())) {
-//         console.error('Error parsing reminderTime. Unable to schedule notification.');
-//       } else {
-//         // Format the reminderTime as a string in the desired format
-//         const formattedReminderTime = parsedReminderTime.toLocaleTimeString('en-US', {
-//           hour: '2-digit',
-//           minute: '2-digit',
-//           hour12: true,
-//         });
-
-
-
-
-
-
-
-//         // const currentDate = new Date();
+  const fetchData = async () => {
+    try {
     
-//         // // Set the time to 11:50 PM
-//         // currentDate.setHours(2);
-//         // currentDate.setMinutes(58);
-//         // currentDate.setSeconds(45);
-      
-//         // // Ensure that the scheduled time is in the future
-//         // if (currentDate <= new Date()) {
-//         //   currentDate.setDate(currentDate.getDate() ); // Schedule for the next day
-//         // }
-  
 
-//         console.log('Formatted reminderTime:', formattedReminderTime);
-
-//         // Schedule the notification
-//         PushNotification.localNotificationSchedule({
-//           channelId: 'test-channel',
-//           date:  parsedReminderTime,
-//           title: 'kuch bhi',
-//           message: `It's time to take your nightly medicine at !`,
-//           repeatTime: 'daily',
-//         });
-//       }
-//     } catch (error) {
-//       console.error('Error scheduling notification:', error);
-//     }
-//   } else {
-//     console.log('Reminder time is missing. Unable to schedule notification.');
-//   }
-// };
+      // Ensure retrieveDataList is called first
+      // await retrieveDataList();
+console.log(datalist)
+      // Continue with other operations
+      createChannels();
+      scheduleNightlyNotifications();
+    } catch (error) {
+      console.error('Error in fetchData:', error);
+    }
+  };
 
 
-// // useEffect(() => {
-// //   console.log(Data);
-// // }, [Data]);
 
-// useEffect(() => {
-//   const fetchData = async () => {
-//     try {
-//       // SplashScreen.hide();
-//       await loadDataFromStorage();
-//       createChannels();
-//       // Schedule notification at a specific time (e.g., 8:00 AM) only if data is loaded
-//       scheduleNightlyNotification();
-//     } catch (error) {
-//       console.error('Error in fetchData:', error);
-//     }
-//   };
 
-//   fetchData();
-// }, []); // Empty dependency array to execute only once when component mounts
 
  
   const {patientEmail}=useContext(UserContext)
@@ -142,25 +125,40 @@ const MedicineHome = ({ navigation}) => {
 
   useEffect(() => {
     console.log("i ran first")
+    fetchData();
     fetchReminders();
   }, []); // Empty dependency array means this effect runs only once (when the component mounts)
 
-  useEffect(() => {
-    console.log("second use effect")
-    const newinterval = setInterval(() => {
-      checkAndSendReminders();
-      console.log("----------------")
-      console.log("Running after 30 sec")
-    }, 60000);
-    return () =>
-    {clearInterval(newinterval) 
-      console.log("interval cleared")}
-  }, [reminderList]);
+  // useEffect(() => {
+  //   console.log("second use effect")
+  //   const newinterval = setInterval(() => {
+  //     checkAndSendReminders();
+  //     console.log("----------------")
+  //     console.log("Running after 30 sec")
+  //   }, 60000);
+  //   return () =>
+  //   {clearInterval(newinterval) 
+  //     console.log("interval cleared")}
+  // }, [reminderList]);
 
   const fetchReminders = async() => {
+
+
+
+    await fetchData();
+
+
+
+
+
+
+
+
+
+
+
     console.log("fetcReminder is called")
-    // Replace 'YOUR_BACKEND_API_URL_HERE' with the actual API endpoint for fetching reminders
-    // axios.get(`http://10.0.2.2:8080/patient/allReminder/${patientEmail}`)
+
     axios.get(`http://192.168.100.14:8080/patient/allReminder/${patientEmail}`)
 
       .then(response => {
